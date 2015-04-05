@@ -24,48 +24,6 @@ def json_response(fn):
     return wrapper
 
 
-@app.route('/competition')
-@cross_origin()
-@json_response
-def get_competitions():
-    return {
-        'competitions': SERVICES['competition'].get_all()
-    }
-
-
-@app.route('/season')
-@cross_origin()
-@json_response
-def get_seasons():
-    assert 'competition_id' in flask.request.args
-
-    competition_id = flask.request.args['competition_id']
-    seasons = SERVICES['season'].get_by_competition_id(competition_id)
-    return {
-        'seasons': seasons
-    }
-
-
-@app.route('/season/<int:season_id>/fixtures')
-@cross_origin()
-@json_response
-def get_fixtures_by_season_id(season_id):
-    gameday = flask.request.args.get('gameday', None)
-
-    fixtures = SERVICES['season'].get_fixtures_by_season_id(season_id, gameday)
-    for fixture in fixtures:
-        fixture['home_recent_games'] = get_recent_games(
-            season_id, fixture['home_team_id'], 5)
-        fixture['away_recent_games'] = get_recent_games(
-            season_id, fixture['away_team_id'], 5)
-        fixture['head_to_head'] = get_head_to_head(
-            fixture['home_team_id'], fixture['away_team_id'], 5)
-
-    return {
-        'fixtures': fixtures
-    }
-
-
 def _get_table_by_season_id(season_id, game_day):
     table = SERVICES['season'].get_current_table(season_id, game_day)
     result = []
@@ -81,26 +39,6 @@ def _get_table_by_season_id(season_id, game_day):
     return result
 
 
-@app.route('/season/<int:season_id>/table')
-@cross_origin()
-@json_response
-def get_table_by_season_id(season_id):
-    result = _get_table_by_season_id(season_id, None)
-    return {
-        'table': result
-    }
-
-
-@app.route('/fixture/<int:fixture_id>', methods=['PATCH'])
-@cross_origin()
-@json_response
-def update_score(fixture_id):
-    r = flask.request.json
-    SERVICES['fixture'].update_score(
-        fixture_id, r['home_score'], r['away_score'])
-    return {}
-
-
 @app.route('/current_seasons')
 @cross_origin()
 @json_response
@@ -108,60 +46,6 @@ def get_current_seasons():
     start_year = flask.request.args.get('start_year', 2015)
     return {
         'current_seasons': SERVICES['season'].get_current_seasons(start_year)
-    }
-
-
-def get_recent_games(season_id, team_id, num_of_games):
-    games = SERVICES['team'].get_recent_games(season_id, team_id, num_of_games)
-    result = []
-    for game in games:
-        is_home = (game['home_team_id'] == team_id)
-        score = "%s:%s" % (
-            game['home_score'] if is_home else game['away_score'],
-            game['away_score'] if is_home else game['home_score'],
-        )
-
-        result.append({
-            'is_home': is_home,
-            'score': score,
-            'against': game['away_team'] if is_home else game['home_team'],
-            'against_id': game['away_team_id']
-            if is_home else game['home_team_id'],
-            'game_day': game['game_day'],
-        })
-
-    return result
-
-
-def get_head_to_head(team1_id, team2_id, num_of_games):
-    games = SERVICES['team'].get_head_to_head(team1_id, team2_id, num_of_games)
-    result = []
-    for game in games:
-        result.append({
-            'season_id': game['season_id'],
-            'game_day': game['game_day'],
-            'team1': game['home_team'],
-            'team1_id': game['home_team_id'],
-            'team2': game['away_team'],
-            'team2_id': game['away_team_id'],
-            'score': '%s:%s' % (game['home_score'], game['away_score']),
-        })
-
-    return result
-
-
-@app.route('/fixture')
-@cross_origin()
-@json_response
-def get_fixtures():
-    assert 'season_id' in flask.request.args
-    assert 'game_day' in flask.request.args
-
-    season_id = flask.request.args['season_id']
-    game_day = flask.request.args['game_day']
-    fixtures = SERVICES['season'].get_fixtures_by_season_id(season_id, game_day)
-    return {
-        'fixtures': fixtures
     }
 
 

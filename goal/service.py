@@ -63,17 +63,6 @@ class SeasonService(Service):
     def get_by_season_id(self, season_id):
         return self.session.query(Season).filter_by(season_id=season_id).one()
 
-    # @deprecated
-    def get_fixtures_by_season_id(self, season_id, game_day=None):
-        query = (
-            self.session.query(Fixture)
-            .filter_by(season_id=season_id)
-        )
-
-        if game_day:
-            query = query.filter_by(game_day=game_day)
-        return query.all()
-
     def get_fixtures(self, season_id, game_day, team_ids, order_by, count):
         query = self.session.query(Fixture)
         if season_id is not None:
@@ -252,43 +241,3 @@ class FixtureService(Service):
 class TeamService(Service):
     def get_by_id(self, id):
         return Team.get_by_id(id)
-
-    @json
-    def get_recent_games(self, season_id, team_id, num_of_games):
-        query = (
-            self.session.query(Fixture)
-            .filter_by(season_id=season_id)
-            .filter(or_(
-                Fixture.home_team_id == team_id,
-                Fixture.away_team_id == team_id))
-            .filter(and_(
-                Fixture.home_score != None,  # noqa
-                Fixture.away_score != None))
-            .order_by(
-                Fixture.game_day.desc()))
-        if num_of_games is not None:
-            query = query.limit(num_of_games)
-
-        return query.all()
-
-    @json
-    def get_head_to_head(self, team1_id, team2_id, num_of_games):
-        query = (
-            self.session.query(Fixture)
-            .filter(and_(
-                Fixture.home_score != None,  # noqa
-                Fixture.away_score != None))
-            .filter(or_(
-                and_(
-                    Fixture.home_team_id == team1_id,
-                    Fixture.away_team_id == team2_id),
-                and_(
-                    Fixture.home_team_id == team2_id,
-                    Fixture.away_team_id == team1_id)))
-            .order_by(
-                Fixture.season_id.desc(),
-                Fixture.game_day.desc()))
-        if num_of_games is not None:
-            query = query.limit(num_of_games)
-
-        return query.all()
