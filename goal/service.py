@@ -1,6 +1,6 @@
 import random
 import functools
-from sqlalchemy import func, and_, or_
+from sqlalchemy import and_, or_
 from .db import Competition, Season, Fixture, Country, Team
 from collections import defaultdict
 from .predict import SimplePredictor
@@ -22,6 +22,10 @@ def json(fn):
         else:
             return result.__json__()
     return wrapper
+
+
+def _shift(array):
+    return array[1:] + [array[0]]
 
 
 class Service(object):
@@ -59,9 +63,8 @@ class SeasonService(Service):
             .all()
         )
 
-    @json
     def get_by_season_id(self, season_id):
-        return self.session.query(Season).filter_by(season_id=season_id).one()
+        return Season.get_by_id(season_id)
 
     def get_fixtures(self, season_id, game_day, team_ids, order_by, count):
         query = self.session.query(Fixture)
@@ -85,15 +88,15 @@ class SeasonService(Service):
             query = query.limit(count)
         return query.all()
 
-    def get_current_table(self, season_id, gameday=None):
+    def get_current_table(self, season_id, game_day=None):
         query = (
             self.session.query(Fixture)
             .filter(Fixture.season_id == season_id)
             .filter(Fixture.home_score != None)  # noqa
             .filter(Fixture.away_score != None)
         )
-        if gameday is not None:
-            query = query.filter(Fixture.game_day <= gameday)
+        if game_day is not None:
+            query = query.filter(Fixture.game_day <= game_day)
 
         table_rows = defaultdict(lambda: defaultdict(int))
 
@@ -155,6 +158,10 @@ class SeasonService(Service):
 
         return sorted(table_rows.items(), cmp_fn)
 
+    def end_season(self, season_id):
+        season = self.get_by_season_id(season_id)
+        assert season.next_game_day is not None, "Season is not yet finished"
+
     def new_season(self, competition, start_year):
         end_year = start_year + 1
 
@@ -168,6 +175,7 @@ class SeasonService(Service):
         season.fixtures = fixtures
         self.session.add(season)
         self.session.commit()
+        return season
 
     def schedule_fixtures(self, teams):
         num_teams = len(teams)
@@ -184,7 +192,7 @@ class SeasonService(Service):
                 if home == 'GHOST' or away == 'GHOST':
                     continue
 
-                if random.choice([True, False]):
+                if r % 2 == 0:
                     home, away = away, home
 
                 fixture = Fixture(
@@ -195,7 +203,7 @@ class SeasonService(Service):
                 fixtures.append(fixture)
 
             first, rest = teams[0], teams[1:]
-            teams = [first] + self.shift(rest)
+            teams = [first] + _shift(rest)
 
         # generate the mirror fixtures
         for fixture in list(fixtures):
@@ -207,13 +215,13 @@ class SeasonService(Service):
 
         return fixtures
 
-    def shift(self, array):
-        return array[1:] + [array[0]]
-
 
 class CompetitionService(Service):
     def get_all(self):
         return self.session.query(Competition).all()
+
+    def get_by_id(self, competition_id):
+        return Competition.get_by_id(competition_id)
 
 
 class FixtureService(Service):

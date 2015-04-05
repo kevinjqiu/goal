@@ -29,3 +29,11 @@ class Competition(Base):
 
     def __repr__(self):
         return "<Competition: {},{}>".format(self.competition_id, self.name)
+
+    @classmethod
+    def get_by_id(cls, competition_id):
+        return (
+            cls.session.query(Competition)
+            .filter_by(competition_id=competition_id)
+            .one()
+        )

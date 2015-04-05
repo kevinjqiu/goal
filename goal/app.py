@@ -5,6 +5,9 @@ from .service import SERVICES
 from flask.ext.cors import cross_origin
 
 
+DEFAULT_START_YEAR = 2015
+
+
 class MyJSONEncoder(flask.json.JSONEncoder):
     def default(self, o):
         if hasattr(o, '__json__'):
@@ -92,6 +95,20 @@ def v2_get_season(season_id):
     return {
         'seasons': [season],
     }
+
+
+@v2_route(app, '/v2/seasons', methods=['POST'])
+def v2_create_season():
+    competiton_id = flask.request.json['competition_id']
+    competition = SERVICES['competition'].get_by_id(competiton_id)
+    seasons = SERVICES['season'].get_by_competition_id(competiton_id)
+    if len(seasons) > 0:
+        season = seasons[-1]
+    else:
+        season = SERVICES['season'].new_season(competition, DEFAULT_START_YEAR)
+        return {
+            'season': [season]
+        }
 
 
 @v2_route(app, '/v2/fixtures')

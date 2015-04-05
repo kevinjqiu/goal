@@ -29,6 +29,10 @@ class Season(Base):
         return "<Season: {}>".format(self.season_id)
 
     @classmethod
+    def get_by_id(cls, season_id):
+        return cls.session.query(Season).filter_by(season_id=season_id).one()
+
+    @classmethod
     def get_num_of_gamedays(cls, season_id):
         return (
             cls.session.query(func.max(Fixture.game_day))
@@ -44,5 +48,4 @@ class Season(Base):
                 Fixture.away_score == None))
             .filter(Fixture.season_id == season_id)
         )
-        result = query.scalar()
-        return result if result is not None else 1
+        return query.scalar()
