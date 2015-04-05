@@ -158,9 +158,19 @@ class SeasonService(Service):
 
         return sorted(table_rows.items(), cmp_fn)
 
-    def end_season(self, season_id):
-        season = self.get_by_season_id(season_id)
+    def end_season(self, season):
         assert season.next_game_day is not None, "Season is not yet finished"
+        lower_tier_competition = season.competition.lower_tier_competition
+        if lower_tier_competition is not None:
+            try:
+                lower_tier_season = lower_tier_competition.seasons[-1]
+            except IndexError:
+                lower_tier_season = None
+            if lower_tier_season is not None:
+                end_season(lower_tier_season)
+        # TODO:
+        # send the bottom n teams to the lower tier
+        # take the top n teams from the lower tier
 
     def new_season(self, competition, start_year):
         end_year = start_year + 1

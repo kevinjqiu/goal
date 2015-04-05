@@ -19,6 +19,11 @@ class Competition(Base):
         'Season', uselist=True, backref="competition",
         order_by='Season.start_year')
 
+    higher_tier_competition = relationship(
+        'Competition', foreign_keys=[relegation_to])
+    lower_tier_competition = relationship(
+        'Competition', foreign_keys=[promotion_to])
+
     def __json__(self):
         return {
             'id': self.competition_id,

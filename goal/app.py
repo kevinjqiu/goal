@@ -104,6 +104,7 @@ def v2_create_season():
     seasons = SERVICES['season'].get_by_competition_id(competiton_id)
     if len(seasons) > 0:
         season = seasons[-1]
+        SERVICES['season'].end_season(season)
     else:
         season = SERVICES['season'].new_season(competition, DEFAULT_START_YEAR)
         return {
