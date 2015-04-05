@@ -1,0 +1,294 @@
+import random
+import functools
+from sqlalchemy import func, and_, or_
+from .db import Competition, Season, Fixture, Country, Team
+from collections import defaultdict
+from .predict import SimplePredictor
+
+
+SERVICES = {}
+
+
+def json(fn):
+    if hasattr(fn, '__json__'):
+        return fn.__json__()
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        result = fn(*args, **kwargs)
+        if isinstance(result, (list, tuple)):
+            return [
+                obj.__json__() for obj in result]
+        else:
+            return result.__json__()
+    return wrapper
+
+
+class Service(object):
+    def __init__(self, session):
+        self.session = session
+
+
+class SeasonService(Service):
+    def get_num_of_gamedays(self, season_id):
+        return Season.get_num_of_gamedays(season_id)
+
+    def get_current_seasons(self, start_year):
+        # TODO: Use start_year
+        retval = []
+        for country in self.session.query(Country).all():
+            cc = {
+                'country': json(country),
+                'seasons': []
+            }
+            for competition in country.competitions:
+                season = competition.seasons[-1]
+                competition = season.competition
+                season = json(season)
+                season['competition'] = json(competition)
+                season['next_game_day'] = Season.get_next_game_day(season['id'])
+                cc['seasons'].append(season)
+            retval.append(cc)
+        return retval
+
+    def get_by_competition_id(self, competition_id):
+        return (
+            self.session.query(Season)
+            .filter_by(competition_id=competition_id)
+            .order_by(Season.start_year.desc())
+            .all()
+        )
+
+    @json
+    def get_by_season_id(self, season_id):
+        return self.session.query(Season).filter_by(season_id=season_id).one()
+
+    # @deprecated
+    def get_fixtures_by_season_id(self, season_id, game_day=None):
+        query = (
+            self.session.query(Fixture)
+            .filter_by(season_id=season_id)
+        )
+
+        if game_day:
+            query = query.filter_by(game_day=game_day)
+        return query.all()
+
+    def get_fixtures(self, season_id, game_day, team_ids, order_by, count):
+        query = self.session.query(Fixture)
+        if season_id is not None:
+            query = query.filter_by(season_id=season_id)
+        if game_day is not None:
+            query = query.filter_by(game_day=game_day)
+        if team_ids is not None:
+            team_ids = team_ids.split(',')
+            conj = or_ if len(team_ids) == 1 else and_
+            query = query.filter(conj(
+                Fixture.home_team_id.in_(team_ids),
+                Fixture.away_team_id.in_(team_ids)))
+        if order_by is not None:
+            segments = order_by.split('_')
+            direction = segments[-1]
+            field_name = '_'.join(segments[:-1])
+            sort_fn = getattr(getattr(Fixture, field_name), direction)
+            query = query.order_by(sort_fn())
+        if count is not None:
+            query = query.limit(count)
+        return query.all()
+
+    def get_current_table(self, season_id, gameday=None):
+        query = (
+            self.session.query(Fixture)
+            .filter(Fixture.season_id == season_id)
+            .filter(Fixture.home_score != None)  # noqa
+            .filter(Fixture.away_score != None)
+        )
+        if gameday is not None:
+            query = query.filter(Fixture.game_day <= gameday)
+
+        table_rows = defaultdict(lambda: defaultdict(int))
+
+        fixtures = query.all()
+        for fixture in fixtures:
+            home_team_id, away_team_id = \
+                fixture.home_team_id, fixture.away_team_id
+
+            table_rows[home_team_id]['team_name'] = fixture.home_team.name
+            table_rows[home_team_id]['h_gf'] += fixture.home_score
+            table_rows[home_team_id]['h_ga'] += fixture.away_score
+
+            table_rows[away_team_id]['team_name'] = fixture.away_team.name
+            table_rows[away_team_id]['a_gf'] += fixture.away_score
+            table_rows[away_team_id]['a_ga'] += fixture.home_score
+
+            if fixture.home_score > fixture.away_score:
+                table_rows[home_team_id]['h_win'] += 1
+                table_rows[away_team_id]['a_loss'] += 1
+            elif fixture.home_score < fixture.away_score:
+                table_rows[home_team_id]['h_loss'] += 1
+                table_rows[away_team_id]['a_win'] += 1
+            else:
+                table_rows[home_team_id]['h_draw'] += 1
+                table_rows[away_team_id]['a_draw'] += 1
+
+        for team_stat in table_rows.values():
+            team_stat['pld'] = sum([
+                team_stat['h_win'], team_stat['h_draw'], team_stat['h_loss'],
+                team_stat['a_win'], team_stat['a_draw'], team_stat['a_loss'],
+            ])
+            team_stat['pts'] = (
+                3 * (team_stat['h_win'] + team_stat['a_win']) +
+                1 * (team_stat['h_draw'] + team_stat['a_draw'])
+            )
+            team_stat['win'] = team_stat['h_win'] + team_stat['a_win']
+            team_stat['draw'] = team_stat['h_draw'] + team_stat['a_draw']
+            team_stat['loss'] = team_stat['h_loss'] + team_stat['a_loss']
+            team_stat['gf'] = team_stat['h_gf'] + team_stat['a_gf']
+            team_stat['ga'] = team_stat['h_ga'] + team_stat['a_ga']
+            team_stat['gd'] = team_stat['gf'] - team_stat['ga']
+
+        def cmp_fn(row1, row2):
+            _, t1 = row1
+            _, t2 = row2
+            if t1['pts'] > t2['pts']:
+                return -1
+            if t1['pts'] < t2['pts']:
+                return 1
+            if t1['gd'] > t2['gd']:
+                return -1
+            if t1['gd'] < t2['gd']:
+                return 1
+            if t1['gf'] > t2['gf']:
+                return -1
+            if t1['gf'] < t2['gf']:
+                return 1
+            return 0
+
+        return sorted(table_rows.items(), cmp_fn)
+
+    def new_season(self, competition, start_year):
+        end_year = start_year + 1
+
+        season = Season(
+            start_year=start_year,
+            end_year=end_year,
+        )
+        season.competition = competition
+        teams = competition.current_teams
+        fixtures = self.schedule_fixtures(teams)
+        season.fixtures = fixtures
+        self.session.add(season)
+        self.session.commit()
+
+    def schedule_fixtures(self, teams):
+        num_teams = len(teams)
+        num_rounds = num_teams - 1
+
+        if num_teams % 2 == 1:
+            teams.append('GHOST')
+        random.shuffle(teams)
+
+        fixtures = []
+        for r in xrange(num_rounds):
+            for i in xrange(num_teams / 2):
+                home, away = teams[i], teams[-(i+1)]
+                if home == 'GHOST' or away == 'GHOST':
+                    continue
+
+                if random.choice([True, False]):
+                    home, away = away, home
+
+                fixture = Fixture(
+                    game_day=r+1,
+                    home_team=home,
+                    away_team=away,
+                )
+                fixtures.append(fixture)
+
+            first, rest = teams[0], teams[1:]
+            teams = [first] + self.shift(rest)
+
+        # generate the mirror fixtures
+        for fixture in list(fixtures):
+            fixtures.append(Fixture(
+                game_day=fixture.game_day+num_teams-1,
+                home_team=fixture.away_team,
+                away_team=fixture.home_team
+            ))
+
+        return fixtures
+
+    def shift(self, array):
+        return array[1:] + [array[0]]
+
+
+class CompetitionService(Service):
+    def get_all(self):
+        return self.session.query(Competition).all()
+
+
+class FixtureService(Service):
+    def update_score(self, fixture_id, home_score, away_score):
+        fixture = self.session.query(Fixture).filter_by(
+            fixture_id=fixture_id).one()
+        fixture.home_score = home_score
+        fixture.away_score = away_score
+        self.session.add(fixture)
+        self.session.commit()
+
+    def predict_score(self, fixture_id):
+        fixture = Fixture.get_by_id(fixture_id)
+        if fixture.game_day == 1:
+            return 0, 0
+
+        past_fixtures = Fixture.get_past_fixtures(
+            fixture.season_id, fixture.game_day)
+
+        predictor = SimplePredictor(past_fixtures)
+        return predictor.predict_score(
+            fixture.home_team_id, fixture.away_team_id)
+
+
+class TeamService(Service):
+    def get_by_id(self, id):
+        return Team.get_by_id(id)
+
+    @json
+    def get_recent_games(self, season_id, team_id, num_of_games):
+        query = (
+            self.session.query(Fixture)
+            .filter_by(season_id=season_id)
+            .filter(or_(
+                Fixture.home_team_id == team_id,
+                Fixture.away_team_id == team_id))
+            .filter(and_(
+                Fixture.home_score != None,  # noqa
+                Fixture.away_score != None))
+            .order_by(
+                Fixture.game_day.desc()))
+        if num_of_games is not None:
+            query = query.limit(num_of_games)
+
+        return query.all()
+
+    @json
+    def get_head_to_head(self, team1_id, team2_id, num_of_games):
+        query = (
+            self.session.query(Fixture)
+            .filter(and_(
+                Fixture.home_score != None,  # noqa
+                Fixture.away_score != None))
+            .filter(or_(
+                and_(
+                    Fixture.home_team_id == team1_id,
+                    Fixture.away_team_id == team2_id),
+                and_(
+                    Fixture.home_team_id == team2_id,
+                    Fixture.away_team_id == team1_id)))
+            .order_by(
+                Fixture.season_id.desc(),
+                Fixture.game_day.desc()))
+        if num_of_games is not None:
+            query = query.limit(num_of_games)
+
+        return query.all()

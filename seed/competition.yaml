@@ -1,0 +1,34 @@
+---
+-
+  competition_id: ED2
+  country_id: ENG
+  name: English League 2
+  tier: 4
+  promotion_to: ED1
+  num_promoted: 4
+  num_relegated: 0
+-
+  competition_id: ED1
+  country_id: ENG
+  name: English League 1
+  tier: 3
+  promotion_to: ECH
+  relegation_to: ED2
+  num_promoted: 3
+  num_relegated: 4
+-
+  competition_id: ECH
+  country_id: ENG
+  name: English Championship
+  tier: 2
+  promotion_to: EPL
+  relegation_to: ED1
+  num_promoted: 3
+  num_relegated: 3
+-
+  competition_id: EPL
+  country_id: ENG
+  name: English Premier League
+  tier: 1
+  relegation_to: ECH
+  num_relegated: 3

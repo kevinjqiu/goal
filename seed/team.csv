@@ -1,0 +1,45 @@
+country_id,name,team_id,current_competition_id
+ENG,AFC Bournemouth,ABN,ECH
+ENG,Birmingham City,BIR,ECH
+ENG,Blackburn Rovers,BRV,ECH
+ENG,Blackpool,BPL,ECH
+ENG,Bolton Wanderers,BOL,ECH
+ENG,Brentford,BRT,ECH
+ENG,Brighton and Hove Albion,BHA,ECH
+ENG,Cardiff City,CAR,ECH
+ENG,Charlton Athletic,CHA,ECH
+ENG,Derby County,DER,ECH
+ENG,Fulham,FUL,ECH
+ENG,Huddersfield Town,HUD,ECH
+ENG,Ipswich Town,IPS,ECH
+ENG,Leeds United,LEE,ECH
+ENG,Middlesbrough,MID,ECH
+ENG,Millwall,MIL,ECH
+ENG,Norwich City,NOR,ECH
+ENG,Nottingham Forest,NOT,ECH
+ENG,Reading,RDN,ECH
+ENG,Rotherham United,ROT,ECH
+ENG,Sheffield Wednesday,SHW,ECH
+ENG,Watford,WAT,ECH
+ENG,Wigan Athletic,WGA,ECH
+ENG,Wolverhampton Wanderers,WOL,ECH
+ENG,Arsenal,ARS,EPL
+ENG,Aston Villa,AST,EPL
+ENG,Burnley,BNL,EPL
+ENG,Chelsea,CHL,EPL
+ENG,Crystal Palace,CRY,EPL
+ENG,Everton,EVT,EPL
+ENG,Hull City,HUL,EPL
+ENG,Leicester City,LEI,EPL
+ENG,Liverpool,LIV,EPL
+ENG,Manchester City,MNC,EPL
+ENG,Manchester United,MNU,EPL
+ENG,Newcastle United,NEW,EPL
+ENG,Queens Park Rangers,QPR,EPL
+ENG,Southampton,STN,EPL
+ENG,Stoke City,STK,EPL
+ENG,Sunderland,SUN,EPL
+ENG,Swansea City,SWC,EPL
+ENG,Tottenham Hotspur,TOH,EPL
+ENG,West Bromwich Albion,WBA,EPL
+ENG,West Ham United,WHU,EPL
