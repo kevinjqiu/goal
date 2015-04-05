@@ -46,12 +46,13 @@ class SeasonService(Service):
                 'seasons': []
             }
             for competition in country.competitions:
-                season = competition.seasons[-1]
-                competition = season.competition
-                season = json(season)
-                season['competition'] = json(competition)
-                season['next_game_day'] = Season.get_next_game_day(season['id'])
-                cc['seasons'].append(season)
+                if len(competition.seasons) > 0:
+                    season = competition.seasons[-1]
+                    competition = season.competition
+                    season = json(season)
+                    season['competition'] = json(competition)
+                    season['next_game_day'] = Season.get_next_game_day(season['id'])
+                    cc['seasons'].append(season)
             retval.append(cc)
         return retval
 
@@ -159,7 +160,7 @@ class SeasonService(Service):
         return sorted(table_rows.items(), cmp_fn)
 
     def end_season(self, season):
-        assert season.next_game_day is not None, "Season is not yet finished"
+        # assert season.next_game_day is not None, "Season is not yet finished"
         lower_tier_competition = season.competition.lower_tier_competition
         if lower_tier_competition is not None:
             try:
