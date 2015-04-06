@@ -170,8 +170,6 @@ class SeasonService(Service):
                 lower_tier_season = lower_tier_competition.seasons[-1]
             except IndexError:
                 pass
-            # if lower_tier_season is not None:
-            #     self.end_season(lower_tier_season)
 
         # send the bottom n teams to the lower tier
         table = self.get_current_table(season.season_id)
@@ -186,7 +184,7 @@ class SeasonService(Service):
             lower_tier_table = self.get_current_table(
                 lower_tier_season.season_id)
             top_positions = \
-                lower_tier_table[:lower_tier_competition.num_promoted + 1]
+                lower_tier_table[:lower_tier_competition.num_promoted]
             for team_id, _ in top_positions:
                 team = Team.get_by_id(team_id)
                 team.current_competition = competition
