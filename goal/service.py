@@ -160,18 +160,41 @@ class SeasonService(Service):
         return sorted(table_rows.items(), cmp_fn)
 
     def end_season(self, season):
-        # assert season.next_game_day is not None, "Season is not yet finished"
+        assert season.__json__()['next_game_day'] is None, \
+            "Season is not yet finished"
+        competition = season.competition
         lower_tier_competition = season.competition.lower_tier_competition
+        lower_tier_season = None
         if lower_tier_competition is not None:
             try:
                 lower_tier_season = lower_tier_competition.seasons[-1]
             except IndexError:
-                lower_tier_season = None
-            if lower_tier_season is not None:
-                end_season(lower_tier_season)
-        # TODO:
+                pass
+            # if lower_tier_season is not None:
+            #     self.end_season(lower_tier_season)
+
         # send the bottom n teams to the lower tier
+        table = self.get_current_table(season.season_id)
+        if lower_tier_season and competition.num_relegated:
+            bottom_positions = table[-competition.num_relegated:]
+            for team_id, _ in bottom_positions:
+                team = Team.get_by_id(team_id)
+                team.current_competition = lower_tier_competition
+                self.session.add(team)
         # take the top n teams from the lower tier
+        if lower_tier_season and lower_tier_competition.num_promoted:
+            lower_tier_table = self.get_current_table(
+                lower_tier_season.season_id)
+            top_positions = \
+                lower_tier_table[:lower_tier_competition.num_promoted + 1]
+            for team_id, _ in top_positions:
+                team = Team.get_by_id(team_id)
+                team.current_competition = competition
+                self.session.add(team)
+        self.session.commit()
+        self.new_season(competition, season.end_year)
+        if lower_tier_competition is not None and lower_tier_season is not None:
+            self.new_season(lower_tier_competition, lower_tier_season.end_year)
 
     def new_season(self, competition, start_year):
         end_year = start_year + 1
@@ -189,6 +212,7 @@ class SeasonService(Service):
         return season
 
     def schedule_fixtures(self, teams):
+        teams = list(teams)
         num_teams = len(teams)
         num_rounds = num_teams - 1
 
@@ -234,6 +258,14 @@ class CompetitionService(Service):
     def get_by_id(self, competition_id):
         return Competition.get_by_id(competition_id)
 
+    def get_top_tier_in_country(self, country_id):
+        return (
+            self.session.query(Competition)
+            .filter_by(country_id=country_id)
+            .order_by(Competition.tier.asc())
+            .limit(1)
+            .all()[0]
+        )
 
 class FixtureService(Service):
     def update_score(self, fixture_id, home_score, away_score):

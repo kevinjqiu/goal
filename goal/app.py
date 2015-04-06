@@ -99,17 +99,16 @@ def v2_get_season(season_id):
 
 @v2_route(app, '/v2/seasons', methods=['POST'])
 def v2_create_season():
-    competiton_id = flask.request.json['competition_id']
-    competition = SERVICES['competition'].get_by_id(competiton_id)
-    seasons = SERVICES['season'].get_by_competition_id(competiton_id)
+    country_id = flask.request.json['country_id']
+    competition = SERVICES['competition'].get_top_tier_in_country(country_id)
+    seasons = SERVICES['season'].get_by_competition_id(
+        competition.competition_id)
     if len(seasons) > 0:
         season = seasons[-1]
         SERVICES['season'].end_season(season)
     else:
-        season = SERVICES['season'].new_season(competition, DEFAULT_START_YEAR)
-        return {
-            'season': [season]
-        }
+        SERVICES['season'].new_season(competition, DEFAULT_START_YEAR)
+    return {}
 
 
 @v2_route(app, '/v2/fixtures')
