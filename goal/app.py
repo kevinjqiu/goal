@@ -118,24 +118,27 @@ def v2_get_fixtures():
     team_ids = flask.request.args.get('team_ids', None)
     count = flask.request.args.get('count', None)
     order_by = flask.request.args.get('order_by', None)
+    has_played = flask.request.args.get('has_played', None)
 
     fixtures = [
         item.__json__() for item in
         SERVICES['season'].get_fixtures(
-            season_id, gameday, team_ids, order_by, count)
+            season_id, gameday, team_ids, order_by, count, has_played)
     ]
 
     for fixture in fixtures:
         recent_games_url = (
             '/v2/fixtures?team_ids={}'
             '&count=5'
-            '&order_by=fixture_id_desc')
+            '&order_by=fixture_id_desc'
+            '&has_played=1')
         home_recent_games_url = recent_games_url.format(fixture['home_team'])
         away_recent_games_url = recent_games_url.format(fixture['away_team'])
         head_to_head_url = (
             '/v2/fixtures?team_ids={},{}'
             '&count=5'
             '&order_by=fixture_id_desc'
+            '&has_played=1'
             .format(fixture['home_team'], fixture['away_team'])
         )
 

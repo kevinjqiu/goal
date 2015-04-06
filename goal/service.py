@@ -67,7 +67,9 @@ class SeasonService(Service):
     def get_by_season_id(self, season_id):
         return Season.get_by_id(season_id)
 
-    def get_fixtures(self, season_id, game_day, team_ids, order_by, count):
+    def get_fixtures(
+            self, season_id, game_day, team_ids,
+            order_by, count, has_played=None):
         query = self.session.query(Fixture)
         if season_id is not None:
             query = query.filter_by(season_id=season_id)
@@ -79,6 +81,15 @@ class SeasonService(Service):
             query = query.filter(conj(
                 Fixture.home_team_id.in_(team_ids),
                 Fixture.away_team_id.in_(team_ids)))
+        if has_played is not None:
+            if bool(has_played):
+                query = query.filter(and_(
+                    Fixture.home_score != None,
+                    Fixture.away_score != None))
+            else:
+                query = query.filter(and_(
+                    Fixture.home_score == None,
+                    Fixture.away_score == None))
         if order_by is not None:
             segments = order_by.split('_')
             direction = segments[-1]
@@ -90,6 +101,7 @@ class SeasonService(Service):
         return query.all()
 
     def get_current_table(self, season_id, game_day=None):
+        season = Season.get_by_id(season_id)
         query = (
             self.session.query(Fixture)
             .filter(Fixture.season_id == season_id)
@@ -102,6 +114,14 @@ class SeasonService(Service):
         table_rows = defaultdict(lambda: defaultdict(int))
 
         fixtures = query.all()
+        teams = season.competition.current_teams
+
+        for team in teams:
+            table_rows[team.team_id]['team_name'] = team.name
+            for home_or_away in ('h_', 'a_'):
+                for field in ('win', 'draw', 'loss', 'gf', 'ga', 'gd'):
+                    table_rows[team.team_id][home_or_away + field] = 0
+
         for fixture in fixtures:
             home_team_id, away_team_id = \
                 fixture.home_team_id, fixture.away_team_id
