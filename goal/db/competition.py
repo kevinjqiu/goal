@@ -42,3 +42,12 @@ class Competition(Base):
             .filter_by(competition_id=competition_id)
             .one()
         )
+
+    @classmethod
+    def get_by_country_id(cls, country_id):
+        return (
+            cls.session.query(Competition)
+            .filter_by(country_id=country_id)
+            .order_by(Competition.tier.asc())
+            .all()
+        )

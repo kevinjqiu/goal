@@ -13,11 +13,7 @@ def get_engine(path_to_db):
     return sqlalchemy.create_engine('sqlite:///{}'.format(path_to_db))
 
 
-def bootstrap(session):
-    engine = session.bind
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)
-
+def seed(session):
     seeds = [
         ('country', 'yaml'),
         ('competition', 'yaml'),
@@ -35,9 +31,16 @@ def bootstrap(session):
         with open(seed_file) as f:
             objects = load_fn(f)
             for obj in objects:
-                session.add(model_class(**obj))
+                try:
+                    session.add(model_class(**obj))
+                    session.commit()
+                except sqlalchemy.exc.IntegrityError as e:
+                    session.rollback()
+                    print 'Cannot add {}: {}'.format(obj, str(e))
 
-    for seed in ['teams']:
-        seed_file = 'seed/%s.csv' % seed
 
-    session.commit()
+def bootstrap(session):
+    engine = session.bind
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    seed(session)

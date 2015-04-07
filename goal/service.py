@@ -276,14 +276,9 @@ class CompetitionService(Service):
     def get_by_id(self, competition_id):
         return Competition.get_by_id(competition_id)
 
-    def get_top_tier_in_country(self, country_id):
-        return (
-            self.session.query(Competition)
-            .filter_by(country_id=country_id)
-            .order_by(Competition.tier.asc())
-            .limit(1)
-            .all()[0]
-        )
+    def get_by_country_id(self, country_id):
+        return Competition.get_by_country_id(country_id)
+
 
 class FixtureService(Service):
     def update_score(self, fixture_id, home_score, away_score):

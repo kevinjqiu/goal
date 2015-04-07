@@ -32,3 +32,17 @@
   tier: 1
   relegation_to: ECH
   num_relegated: 3
+-
+  competition_id: ITB
+  country_id: ITA
+  name: Italian Serie B
+  promotion_to: ITA
+  num_promoted: 3
+  tier: 2
+-
+  competition_id: ITA
+  country_id: ITA
+  name: Italian Serie A
+  relegation_to: ITB
+  num_relegated: 3
+  tier: 1
