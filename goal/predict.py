@@ -138,6 +138,7 @@ class DixonRobinsonPredictor(SimplePredictor):
 
         away_mean *= self.team_stats[team2].attack_strength
         away_mean *= self.team_stats[team1].defence_weakness
+
         # normalize to average_toals
         factor = (home_mean + away_mean) / average_goals
         home_mean = home_mean / factor
@@ -150,6 +151,4 @@ class DixonRobinsonPredictor(SimplePredictor):
         goal_probability_distribution = zip(possible_scores, probabilities)
         goal_probability_distribution.sort(key=operator.itemgetter(1))
 
-        choice = weighted_choice(goal_probability_distribution)
-
-        return choice
+        return weighted_choice(goal_probability_distribution)
