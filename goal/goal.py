@@ -54,7 +54,7 @@ def main():
     elif args.command == 'test':
         from .db import *  # noqa
         from sqlalchemy import and_
-        from .predict import SimplePredictor
+        from .predict import DixonRobinsonPredictor, SimplePredictor
 
         query = (
             Fixture.session.query(Fixture)
@@ -66,19 +66,25 @@ def main():
         )
         fixtures = query.all()
 
-        predictor = SimplePredictor(fixtures)
+        predictors = [
+            DixonRobinsonPredictor(fixtures),
+            # SimplePredictor(fixtures),
+        ]
 
-        next_round = (
-            Fixture.session.query(Fixture)
-            .filter_by(season_id=4)
-            .filter_by(game_day=20)
-            .all()
-        )
+        print predictors[0].predict_score('MNU', 'CHL')
+        # next_round = (
+        #     Fixture.session.query(Fixture)
+        #     .filter_by(season_id=4)
+        #     .filter_by(game_day=20)
+        #     .all()
+        # )
 
-        for fixture in next_round:
-            s1, s2 = predictor.predict_score(
-                fixture.home_team_id, fixture.away_team_id)
-            print "{} {}-{} {}".format(
-                fixture.home_team.name,
-                s1, s2,
-                fixture.away_team.name)
+        # for fixture in next_round:
+        #     for p in predictors:
+        #         s1, s2 = p.predict_score(
+        #             fixture.home_team_id, fixture.away_team_id, 10)
+        #         print "{} {}-{} {}".format(
+        #             fixture.home_team_id,
+        #             s1, s2,
+        #             fixture.away_team_id)
+        #     print

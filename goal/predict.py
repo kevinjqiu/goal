@@ -1,7 +1,9 @@
+import operator
 import math
 from collections import defaultdict
 from random import random
 from bisect import bisect
+from itertools import permutations
 
 
 def poisson(mean, k):
@@ -79,16 +81,28 @@ class SimplePredictor(object):
             stats.attack_strength = 1.0 * stats.goals_for / average_team_goals
             stats.defence_weakness = (
                 1.0 * stats.goals_against / average_team_concedes)
-
         return result
 
-    def predict_score(self, team1, team2):
-        average_home_goals = 1.0 * sum([
+    def average_home_goals(self):
+        return 1.0 * sum([
             fixture.home_score for fixture in self.past_fixtures
         ]) / len(self.past_fixtures)
-        average_away_goals = 1.0 * sum([
+
+
+    def average_away_goals(self):
+        return 1.0 * sum([
             fixture.away_score for fixture in self.past_fixtures
         ]) / len(self.past_fixtures)
+
+    def average_goals(self):
+        return 1.0 * sum([
+            fixture.home_score + fixture.away_score
+            for fixture in self.past_fixtures
+        ]) / len(self.past_fixtures)
+
+    def predict_score(self, team1, team2, max_goal=5):
+        average_home_goals = self.average_home_goals()
+        average_away_goals = self.average_away_goals()
 
         team_stats = self.team_stats
 
@@ -101,11 +115,40 @@ class SimplePredictor(object):
             * average_away_goals * team_stats[team1].defence_weakness
         )
         goals_probability_distribution_1 = poisson_histogram(
-            expected_goal_1, 6)
+            expected_goal_1, max_goal)
         goals_probability_distribution_2 = poisson_histogram(
-            expected_goal_2, 6)
+            expected_goal_2, max_goal)
 
         return (
             weighted_choice(goals_probability_distribution_1),
             weighted_choice(goals_probability_distribution_2),
         )
+
+
+class DixonRobinsonPredictor(SimplePredictor):
+    def home_advantage(self):
+        return 1.0 * self.average_home_goals() / self.average_away_goals()
+
+    def predict_score(self, team1, team2, max_goal=5):
+        average_goals = self.average_goals()
+
+        home_mean = away_mean = average_goals / 2
+        home_mean *= self.home_advantage()
+        home_mean *= self.team_stats[team1].attack_strength
+        home_mean *= self.team_stats[team2].defence_weakness
+
+        away_mean *= self.team_stats[team2].attack_strength
+        away_mean *= self.team_stats[team1].defence_weakness
+
+        possible_scores = list(permutations(range(max_goal), 2))
+        probabilities = [
+            poisson(home_mean, home_score) * poisson(away_mean, away_score)
+            for home_score, away_score in possible_scores]
+        goal_probability_distribution = zip(possible_scores, probabilities)
+        goal_probability_distribution.sort(key=operator.itemgetter(1))
+        import pprint
+
+        pprint.pprint(goal_probability_distribution[-5:])
+        choice = weighted_choice(goal_probability_distribution)
+
+        return choice
