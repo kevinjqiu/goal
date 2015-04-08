@@ -54,37 +54,35 @@ def main():
     elif args.command == 'test':
         from .db import *  # noqa
         from sqlalchemy import and_
-        from .predict import DixonRobinsonPredictor, SimplePredictor
+        from .predict import DixonRobinsonPredictor
 
-        query = (
-            Fixture.session.query(Fixture)
-            .filter_by(season_id=4)
-            .filter(and_(
-                Fixture.home_score != None,  # noqa
-                Fixture.away_score != None
-            ))
-        )
-        fixtures = query.all()
+        for game_day in xrange(30, 35):
+            print
+            print "Game Day %s" % game_day
+            print "-------------------------"
+            next_round = (
+                Fixture.session.query(Fixture)
+                .filter_by(season_id=6)
+                .filter_by(game_day=game_day)
+                .all()
+            )
 
-        predictors = [
-            DixonRobinsonPredictor(fixtures),
-            # SimplePredictor(fixtures),
-        ]
+            query = (
+                Fixture.session.query(Fixture)
+                .filter_by(season_id=6)
+                .filter(and_(
+                    Fixture.home_score != None,  # noqa
+                    Fixture.away_score != None
+                ))
+            )
 
-        print predictors[0].predict_score('MNU', 'CHL')
-        # next_round = (
-        #     Fixture.session.query(Fixture)
-        #     .filter_by(season_id=4)
-        #     .filter_by(game_day=20)
-        #     .all()
-        # )
+            p = DixonRobinsonPredictor(query.all())
 
-        # for fixture in next_round:
-        #     for p in predictors:
-        #         s1, s2 = p.predict_score(
-        #             fixture.home_team_id, fixture.away_team_id, 10)
-        #         print "{} {}-{} {}".format(
-        #             fixture.home_team_id,
-        #             s1, s2,
-        #             fixture.away_team_id)
-        #     print
+            for fixture in next_round:
+                s1, s2 = p.predict_score(
+                    fixture.home_team_id, fixture.away_team_id, 8)
+                print "{} {}-{} {}".format(
+                    fixture.home_team.name,
+                    s1, s2,
+                    fixture.away_team.name)
+                SERVICES['fixture'].update_score(fixture.fixture_id, s1, s2)

@@ -88,7 +88,6 @@ class SimplePredictor(object):
             fixture.home_score for fixture in self.past_fixtures
         ]) / len(self.past_fixtures)
 
-
     def average_away_goals(self):
         return 1.0 * sum([
             fixture.away_score for fixture in self.past_fixtures
@@ -139,6 +138,10 @@ class DixonRobinsonPredictor(SimplePredictor):
 
         away_mean *= self.team_stats[team2].attack_strength
         away_mean *= self.team_stats[team1].defence_weakness
+        # normalize to average_toals
+        factor = (home_mean + away_mean) / average_goals
+        home_mean = home_mean / factor
+        away_mean = away_mean / factor
 
         possible_scores = list(permutations(range(max_goal), 2))
         probabilities = [
@@ -146,9 +149,7 @@ class DixonRobinsonPredictor(SimplePredictor):
             for home_score, away_score in possible_scores]
         goal_probability_distribution = zip(possible_scores, probabilities)
         goal_probability_distribution.sort(key=operator.itemgetter(1))
-        import pprint
 
-        pprint.pprint(goal_probability_distribution[-5:])
         choice = weighted_choice(goal_probability_distribution)
 
         return choice

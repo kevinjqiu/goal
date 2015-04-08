@@ -3,7 +3,7 @@ import functools
 from sqlalchemy import and_, or_
 from .db import Competition, Season, Fixture, Country, Team
 from collections import defaultdict
-from .predict import SimplePredictor
+from .predict import DixonRobinsonPredictor
 
 
 SERVICES = {}
@@ -51,7 +51,8 @@ class SeasonService(Service):
                     competition = season.competition
                     season = json(season)
                     season['competition'] = json(competition)
-                    season['next_game_day'] = Season.get_next_game_day(season['id'])
+                    season['next_game_day'] = \
+                        Season.get_next_game_day(season['id'])
                     cc['seasons'].append(season)
             retval.append(cc)
         return retval
@@ -84,11 +85,11 @@ class SeasonService(Service):
         if has_played is not None:
             if bool(has_played):
                 query = query.filter(and_(
-                    Fixture.home_score != None,
+                    Fixture.home_score != None,  # noqa
                     Fixture.away_score != None))
             else:
                 query = query.filter(and_(
-                    Fixture.home_score == None,
+                    Fixture.home_score == None,  # noqa
                     Fixture.away_score == None))
         if order_by is not None:
             segments = order_by.split('_')
@@ -297,7 +298,7 @@ class FixtureService(Service):
         past_fixtures = Fixture.get_past_fixtures(
             fixture.season_id, fixture.game_day)
 
-        predictor = SimplePredictor(past_fixtures)
+        predictor = DixonRobinsonPredictor(past_fixtures)
         return predictor.predict_score(
             fixture.home_team_id, fixture.away_team_id)
 
