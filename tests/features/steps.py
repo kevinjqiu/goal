@@ -4,14 +4,24 @@ from helpers import create_team, create_competition, make_api_request, eq_
 
 
 TEAMS = {
-    'Man Utd': dict(team_id="MNU", name="Man Utd", country_id="ENG"),
-    'Arsenal': dict(team_id="ARS", name="Arsenal", country_id="ENG"),
-}
-
-
-COMPETITIONS = {
-    'EPL': dict(competition_id="EPL", country_id="ENG",
-                name="Premier League", tier=1),
+    'Toronto': dict(
+        team_id="TOR", name="Toronto FC", country_id="CAN",
+        current_competition_id='CPL'),
+    'Montreal': dict(
+        team_id="MTL", name="Montreal Impact", country_id="CAN",
+        current_competition_id='CPL'),
+    'Vancouver': dict(
+        team_id="VAN", name="Vancouver Whitecaps", country_id="CAN",
+        current_competition_id='CPL'),
+    'Ottawa': dict(
+        team_id="OTT", name="Ottawa Fury", country_id="CAN",
+        current_competition_id='CD1'),
+    'Edmonton': dict(
+        team_id="EDM", name="FC Edmonton", country_id="CAN",
+        current_competition_id='CD1'),
+    'Halifax': dict(
+        team_id="HAL", name="Halifax City", country_id="CAN",
+        current_competition_id='CD1'),
 }
 
 
@@ -22,7 +32,6 @@ def g0(step, team_name):
 
 @step('I have a team "([^"]+)" in (.+)$')
 def g1(step, team_name, competition_id):
-    create_competition(**COMPETITIONS[competition_id])
     props = TEAMS[team_name]
     props['current_competition_id'] = competition_id
     create_team(**props)
