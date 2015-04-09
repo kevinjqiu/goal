@@ -1,7 +1,7 @@
 import requests
 import functools
 from lettuce import world
-from goal.db import Country, Team, Competition
+from goal.db import Country, Team, Competition, Season, Fixture
 from nose.tools import eq_  # noqa
 
 
@@ -31,6 +31,21 @@ def create_team(**kwargs):
 @commit
 def create_competition(**kwargs):
     world.session.add(Competition(**kwargs))
+
+
+@commit
+def create_season(**kwargs):
+    season = Season(**kwargs)
+    world.session.add(season)
+    return season
+
+
+@commit
+def create_fixture(season_id, game_day, h, a):
+    world.session.add(Fixture(
+        season_id=season_id,
+        game_day=game_day,
+        home_team_id=h, away_team_id=a))
 
 
 def make_api_request(method, endpoint):
