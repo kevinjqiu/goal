@@ -55,11 +55,11 @@ def start_season(competition_id, season_id):
         create_fixture(season_id, 5, teams[2], teams[0])
         create_fixture(season_id, 6, teams[2], teams[1])
 
-@step('I start a new ([^\s]+) season with id: (\d+)')
+@step('I start a new ([^\s]+) season with id: (\d+)$')
 def w1(step, competition_id, season_id):
     start_season(competition_id, season_id)
 
-@step('I start a new ([^\s]+) season')
+@step('I start a new ([^\s]+) season$')
 def w2(step, competition_id):
     start_season(competition_id, None)
 
