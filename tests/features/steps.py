@@ -1,6 +1,6 @@
 import json
 from lettuce import step, world
-from helpers import create_team, make_api_request, eq_
+from helpers import create_team, create_competition, make_api_request, eq_
 
 
 TEAMS = {
@@ -9,9 +9,23 @@ TEAMS = {
 }
 
 
-@step('I have a team "([^"]+)"')
+COMPETITIONS = {
+    'EPL': dict(competition_id="EPL", country_id="ENG",
+                name="Premier League", tier=1),
+}
+
+
+@step('I have a team "([^"]+)"$')
 def g0(step, team_name):
     create_team(**TEAMS[team_name])
+
+
+@step('I have a team "([^"]+)" in (.+)$')
+def g1(step, team_name, competition_id):
+    create_competition(**COMPETITIONS[competition_id])
+    props = TEAMS[team_name]
+    props['current_competition_id'] = competition_id
+    create_team(**props)
 
 
 @step('I call (GET|POST|PUT|DELETE) (.+)')
@@ -20,9 +34,9 @@ def w0(step, method, endpoint):
     world.response = response
 
 
-@step('I get an OK response')
-def t0(step):
-    assert world.response.status_code == 200
+@step('I get a response: (\d+)')
+def t0(step, response_code):
+    eq_(world.response.status_code, int(response_code))
 
 
 @step('The response matches (.+)')
