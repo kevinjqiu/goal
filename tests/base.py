@@ -1,7 +1,7 @@
-import functools
-from goal.db import (
-    get_engine, Base, Country, Team, Competition, Season, Fixture)
+import requests
+from goal.db import get_engine, Base
 from sqlalchemy.orm import sessionmaker
+from fixture import FixtureMixin
 
 
 TEST_DATABASE_NAME = 'goal_integration_test.db'
@@ -20,56 +20,19 @@ COMPETITIONS = [
 SERVICE_LOCATION_PREFIX = 'http://localhost:5000'
 
 
-def commit(fn):
-    @functools.wraps(fn)
-    def wrapper(self, *args, **kwargs):
-        retval = fn(self, *args, **kwargs)
-        self.session.add(retval)
-        self.session.commit()
-        return retval
-    return wrapper
-
-
-class FixtureMixin(object):
-    @classmethod
-    @commit
-    def create_country(cls, country_id, name):
-        return Country(country_id=country_id, name=name)
-
-    @classmethod
-    @commit
-    def create_team(cls, **kwargs):
-        return Team(**kwargs)
-
-    @classmethod
-    @commit
-    def create_competition(cls, **kwargs):
-        return Competition(**kwargs)
-
-    @classmethod
-    @commit
-    def create_season(cls, **kwargs):
-        return Season(**kwargs)
-
-    @classmethod
-    @commit
-    def create_fixture(cls, season_id, game_day, h, a):
-        return Fixture(
-            season_id=season_id,
-            game_day=game_day,
-            home_team_id=h, away_team_id=a)
-
-
 class BaseTestCase(FixtureMixin):
     @classmethod
     def setup_class(cls):
-        engine = get_engine(TEST_DATABASE_NAME)
+        cls.engine = engine = get_engine(TEST_DATABASE_NAME)
         cls.session = session = sessionmaker(bind=engine)()
         Base.session = session
-        Base.metadata.drop_all(engine)
-        Base.metadata.create_all(engine)
 
-        cls.create_country('CAN', 'Canada'),
+    def setup_method(self, method):
+        Base.metadata.drop_all(self.engine)
+        Base.metadata.create_all(self.engine)
 
-        for competition in COMPETITIONS:
-            cls.create_competition(**competition)
+        self.create_country('CAN', 'Canada'),
+
+    def make_api_request(cls, method, endpoint):
+        fn = getattr(requests, method.lower())
+        return fn('{}/{}'.format(SERVICE_LOCATION_PREFIX, endpoint))

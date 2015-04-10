@@ -45,8 +45,3 @@ def create_fixture(season_id, game_day, h, a):
         season_id=season_id,
         game_day=game_day,
         home_team_id=h, away_team_id=a))
-
-
-def make_api_request(method, endpoint):
-    fn = getattr(requests, method.lower())
-    return fn('{}/{}'.format(SERVICE_LOCATION_PREFIX, endpoint))
