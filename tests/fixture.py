@@ -80,7 +80,7 @@ class FixtureMixin(object):
 
     @pytest.fixture
     def cpl(cls):
-        cls.toronto, cls.montreal, cls.vancouver, cls.ottawa
+        cls.toronto(), cls.montreal(), cls.vancouver(), cls.ottawa()
         return cls.create_competition(
             competition_id='CPL', country_id='CAN',
             name='Canadian Premier League', tier=1, relegation_to='CD1',
@@ -88,7 +88,7 @@ class FixtureMixin(object):
 
     @pytest.fixture
     def cd1(cls):
-        cls.halifax, cls.edmonton, cls.pei
+        cls.halifax(), cls.edmonton(), cls.pei()
         return cls.create_competition(
             competition_id='CD1', country_id='CAN',
             name='Canadian Division 1', tier=2,
@@ -97,7 +97,7 @@ class FixtureMixin(object):
     @pytest.fixture
     def cpl_season1(cls):
         CPL_SEASON1_ID = 66
-        cls.cpl
+        cls.cpl()
         season = cls.create_season(**dict(
             season_id=CPL_SEASON1_ID,
             competition_id='CPL',
@@ -125,7 +125,7 @@ class FixtureMixin(object):
     @pytest.fixture
     def cd1_season1(cls):
         CD1_SEASON1_ID = 99
-        cls.cd1
+        cls.cd1()
         season = cls.create_season(**dict(
             season_id=CD1_SEASON1_ID,
             competition_id='CD1',
