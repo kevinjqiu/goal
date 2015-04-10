@@ -1,3 +1,4 @@
+import json
 import requests
 from goal.db import get_engine, Base
 from sqlalchemy.orm import sessionmaker
@@ -33,6 +34,17 @@ class BaseTestCase(FixtureMixin):
 
         self.create_country('CAN', 'Canada'),
 
-    def make_api_request(cls, method, endpoint):
+    def make_api_request(cls, method, endpoint, **kwargs):
         fn = getattr(requests, method.lower())
-        return fn('{}/{}'.format(SERVICE_LOCATION_PREFIX, endpoint))
+        if method.lower() in ('put', 'post'):
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            headers.update(kwargs.pop('headers', {}))
+            kwargs['headers'] = headers
+
+            data = kwargs.pop('data', None)
+            if isinstance(data, dict):
+                kwargs['data'] = json.dumps(data)
+
+        return fn('{}/{}'.format(SERVICE_LOCATION_PREFIX, endpoint), **kwargs)

@@ -1,15 +1,28 @@
 from base import BaseTestCase
 
 
-class TestFixture(BaseTestCase):
-    @classmethod
-    def assert_fixture(
-            cls, fixture, home_team, away_team, home_score, away_score):
-        assert fixture['home_team'] == home_team
-        assert fixture['away_team'] == away_team
-        assert fixture['home_score'] == home_score
-        assert fixture['away_score'] == away_score
+def assert_fixture(fixture, home_team, away_team, home_score, away_score):
+    assert fixture['home_team'] == home_team
+    assert fixture['away_team'] == away_team
+    assert fixture['home_score'] == home_score
+    assert fixture['away_score'] == away_score
 
+
+class TestFixtureUpdate(BaseTestCase):
+    def test_update_fixture(self, cd1_season1):
+        fixture = cd1_season1.fixtures[0]
+        fixture_id = fixture.fixture_id
+
+        response = self.make_api_request(
+            'PUT', 'v2/fixtures/%s' % fixture_id,
+            data={'fixture': {'home_score': 5, 'away_score': 0}})
+        assert response.status_code == 200
+        self.session.expire(fixture)
+        assert fixture.home_score == 5
+        assert fixture.away_score == 0
+
+
+class TestFixtureSearch(BaseTestCase):
     def test_get_all_fixtures(self, cd1_season1, cpl_season1):
         response = self.make_api_request('GET', 'v2/fixtures')
         assert len(response.json()['fixtures']) == (6 + 12)
@@ -87,8 +100,8 @@ class TestFixture(BaseTestCase):
         )
         response = response.json()['fixtures']
         assert len(response) == 2
-        self.assert_fixture(response[0], 'EDM', 'HAL', 2, 0)
-        self.assert_fixture(response[1], 'HAL', 'EDM', 2, 0)
+        assert_fixture(response[0], 'EDM', 'HAL', 2, 0)
+        assert_fixture(response[1], 'HAL', 'EDM', 2, 0)
 
     def test_get_fixtures_recent_games(self, cd1_season1):
         fixtures = cd1_season1.fixtures
@@ -103,7 +116,7 @@ class TestFixture(BaseTestCase):
         )
         response = response.json()['fixtures']
         assert len(response) == 4
-        self.assert_fixture(response[0], 'PEI', 'EDM', 2, 0)
-        self.assert_fixture(response[1], 'EDM', 'HAL', 2, 0)
-        self.assert_fixture(response[2], 'EDM', 'PEI', 2, 0)
-        self.assert_fixture(response[3], 'HAL', 'EDM', 2, 0)
+        assert_fixture(response[0], 'PEI', 'EDM', 2, 0)
+        assert_fixture(response[1], 'EDM', 'HAL', 2, 0)
+        assert_fixture(response[2], 'EDM', 'PEI', 2, 0)
+        assert_fixture(response[3], 'HAL', 'EDM', 2, 0)
