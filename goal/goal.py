@@ -44,7 +44,7 @@ def main():
 
     if args.command == 'bootstrap':
         bootstrap(session)
-        # start_season(2015)
+        start_season(2016)
     elif args.command == 'serve':
         app.run(debug=True)
     elif args.command == 'console':

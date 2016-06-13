@@ -46,3 +46,17 @@
   relegation_to: ITB
   num_relegated: 3
   tier: 1
+-
+  competition_id: CSL
+  country_id: CHN
+  name: China Super League
+  relegation_to: CL1
+  num_relegated: 3
+  tier: 1
+-
+  competition_id: CL1
+  country_id: CHN
+  name: China League 1
+  promotion_to: CSL
+  num_promoted: 3
+  tier: 2

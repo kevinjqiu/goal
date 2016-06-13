@@ -5,3 +5,6 @@
 -
   country_id: ITA
   name: Italy
+-
+  country_id: CHN
+  name: China
