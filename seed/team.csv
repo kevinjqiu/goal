@@ -60,18 +60,19 @@ ITA,Empoli,EMP,ITA
 ITA,Hellas Verona,VER,ITA
 ITA,Chievo Verona,CHV,ITA
 ITA,Atalanta,ATA,ITA
-ITA,Cesena,CES,ITA
 ITA,Cagliari,CAG,ITA
-ITA,Parma,PAR,ITA
+ITA,Crotone,CRO,ITA
+ITA,US Pescara,PES,ITA
+ITA,Bologna,BLG,ITA
 ITA,Carpi,CPI,ITB
-ITA,Bologna,BLG,ITB
+ITA,Parma,PAR,ITB
+ITA,Cesena,CES,ITB
 ITA,Vicenza,VIC,ITB
 ITA,US Avellino,AVE,ITB
 ITA,Frosinone,FRO,ITB
 ITA,Livorno,LVN,ITB
 ITA,Spezia,SPZ,ITB
 ITA,Perugia,PRG,ITB
-ITA,US Pescara,PES,ITB
 ITA,Lanciano,LAN,ITB
 ITA,Bari,BAR,ITB
 ITA,Trapani,TRA,ITB
@@ -80,7 +81,6 @@ ITA,Virtus Entella,VET,ITB
 ITA,Ternana,TER,ITB
 ITA,Modena,MOD,ITB
 ITA,Cittadella,CIT,ITB
-ITA,Crotone,CRO,ITB
 ITA,Pro Vercelli,PRV,ITB
 ITA,Catania,CAT,ITB
 ITA,Brescia,BRE,ITB
