@@ -1,10 +1,15 @@
 from .base import v2_route, app
 
 
-@v2_route(app, '/v2/existingGames')
-def existing_games():
+@v2_route(app, '/v2/games')
+def get_existing_games():
     return {
-        'savedGames': [
+        'games': [
             {'id': 'abcdef'}  # TODO
         ]
     }
+
+
+@v2_route(app, '/v2/games', methods=['POST'])
+def new_game():
+    pass
