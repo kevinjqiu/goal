@@ -60,6 +60,15 @@ def v2_route(app, route, *args, **kwargs):
     return decorator
 
 
+@v2_route(app, '/v2/existingGames')
+def existing_games():
+    return {
+        'savedGames': [
+            {'id': 'abcdef'}  # TODO
+        ]
+    }
+
+
 @v2_route(app, '/v2/tables')
 def v2_table():
     assert 'season_id' in flask.request.args
