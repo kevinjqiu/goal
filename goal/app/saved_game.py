@@ -14,32 +14,29 @@ def get_saved_games():
 def get_saved_game(game_id):
     return {
         'gameId': game_id,
-        'leagues': [
-            {
-                'countrId': 'ENG',
+        'countryLeagues': {
+            'ENG': {
                 'countryName': 'England',
-                'leagueId': 'EPL',
-                'leagueName': 'English Premier League',
-            },
-            {
-                'countryId': 'ENG',
-                'countryName': 'England',
-                'leagueId': 'ECH',
-                'leagueName': 'English Championship',
-            },
-            {
-                'countryId': 'ENG',
-                'countryName': 'England',
-                'leagueId': 'EL1',
-                'leagueName': 'English League One',
-            },
-            {
-                'countryId': 'ENG',
-                'countryName': 'England',
-                'leagueId': 'EL2',
-                'leagueName': 'English League Two',
-            },
-        ]
+                'leagues': [
+                    {
+                        'leagueId': 'EPL',
+                        'leagueName': 'English Premier League',
+                    },
+                    {
+                        'leagueId': 'ECH',
+                        'leagueName': 'English Championship',
+                    },
+                    {
+                        'leagueId': 'EL1',
+                        'leagueName': 'English League One',
+                    },
+                    {
+                        'leagueId': 'EL2',
+                        'leagueName': 'English League Two',
+                    },
+                ]
+            }
+        }
     }
 
 
