@@ -44,3 +44,4 @@ docs/_buildenv/
 env/
 *.db
 .ropeproject/
+.env/
