@@ -36,7 +36,7 @@ def seed(session):
                     session.commit()
                 except sqlalchemy.exc.IntegrityError as e:
                     session.rollback()
-                    print 'Cannot add {}: {}'.format(obj, str(e))
+                    print('Cannot add {}: {}'.format(obj, str(e)))
 
 
 def bootstrap(session):

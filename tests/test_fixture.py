@@ -36,7 +36,7 @@ class TestFixtureSearch(BaseTestCase):
         assert len(response.json()['fixtures']) == 12
 
     def test_get_fixtures_by_game_day(self, cpl_season1):
-        for i in xrange(6):
+        for i in range(6):
             response = self.make_api_request(
                 'GET', 'v2/fixtures?season_id=66&gameday=%d' % (i + 1))
             assert len(response.json()['fixtures']) == 2

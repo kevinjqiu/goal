@@ -240,8 +240,8 @@ class SeasonService(Service):
         random.shuffle(teams)
 
         fixtures = []
-        for r in xrange(num_rounds):
-            for i in xrange(num_teams / 2):
+        for r in range(num_rounds):
+            for i in range(num_teams // 2):
                 home, away = teams[i], teams[-(i+1)]
                 if home == 'GHOST' or away == 'GHOST':
                     continue

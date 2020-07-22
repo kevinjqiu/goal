@@ -47,42 +47,42 @@ def main():
         start_season(2016)
     elif args.command == 'serve':
         app.run(debug=True)
-    elif args.command == 'console':
-        import IPython
-        from .db import *  # noqa
-        IPython.embed()
-    elif args.command == 'test':
-        from .db import *  # noqa
-        from sqlalchemy import and_
-        from .predict import DixonRobinsonPredictor
+    # elif args.command == 'console':
+    #     import IPython
+    #     from .db import *  # noqa
+    #     IPython.embed()
+    # elif args.command == 'test':
+    #     from .db import *  # noqa
+    #     from sqlalchemy import and_
+    #     from .predict import DixonRobinsonPredictor
 
-        for game_day in xrange(30, 35):
-            print
-            print "Game Day %s" % game_day
-            print "-------------------------"
-            next_round = (
-                Fixture.session.query(Fixture)
-                .filter_by(season_id=6)
-                .filter_by(game_day=game_day)
-                .all()
-            )
+    #     for game_day in range(30, 35):
+    #         print()
+    #         print("Game Day %s" % game_day)
+    #         print("-------------------------")
+    #         next_round = (
+    #             Fixture.session.query(Fixture)
+    #             .filter_by(season_id=6)
+    #             .filter_by(game_day=game_day)
+    #             .all()
+    #         )
 
-            query = (
-                Fixture.session.query(Fixture)
-                .filter_by(season_id=6)
-                .filter(and_(
-                    Fixture.home_score != None,  # noqa
-                    Fixture.away_score != None
-                ))
-            )
+    #         query = (
+    #             Fixture.session.query(Fixture)
+    #             .filter_by(season_id=6)
+    #             .filter(and_(
+    #                 Fixture.home_score != None,  # noqa
+    #                 Fixture.away_score != None
+    #             ))
+    #         )
 
-            p = DixonRobinsonPredictor(query.all())
+    #         p = DixonRobinsonPredictor(query.all())
 
-            for fixture in next_round:
-                s1, s2 = p.predict_score(
-                    fixture.home_team_id, fixture.away_team_id, 8)
-                print "{} {}-{} {}".format(
-                    fixture.home_team.name,
-                    s1, s2,
-                    fixture.away_team.name)
-                SERVICES['fixture'].update_score(fixture.fixture_id, s1, s2)
+    #         for fixture in next_round:
+    #             s1, s2 = p.predict_score(
+    #                 fixture.home_team_id, fixture.away_team_id, 8)
+    #             print("{} {}-{} {}".format(
+    #                 fixture.home_team.name,
+    #                 s1, s2,
+    #                 fixture.away_team.name))
+    #             SERVICES['fixture'].update_score(fixture.fixture_id, s1, s2)

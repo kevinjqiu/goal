@@ -1,6 +1,7 @@
 import functools
 import flask
-from flask.ext.cors import cross_origin
+# from flask.ext.cors import cross_origin
+from flask_cors import cross_origin
 
 
 def json_response(fn):

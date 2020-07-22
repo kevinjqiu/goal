@@ -11,7 +11,7 @@ def poisson(mean, k):
 
 
 def poisson_histogram(mean, until):
-    return [(x, round(poisson(mean, x), 2)) for x in xrange(until + 1)]
+    return [(x, round(poisson(mean, x), 2)) for x in range(until + 1)]
 
 
 def weighted_choice(choices):
